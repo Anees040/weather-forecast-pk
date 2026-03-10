@@ -85,19 +85,25 @@ class WeatherResponse {
   WeatherData toWeatherData() {
     double rawTemp = main!.temp?.toDouble() ?? 0.0;
     double rawFeelsLike = main!.feelsLike?.toDouble() ?? 0.0;
+    double rawTempMin = main!.tempMin?.toDouble() ?? 0.0;
+    double rawTempMax = main!.tempMax?.toDouble() ?? 0.0;
     return WeatherData(
         dateTime: unixTimestampToDateTimeString(dt),
         temperature: rawTemp.round().toString(),
         tempRaw: rawTemp,
         feelsLikeRaw: rawFeelsLike,
+        tempMinRaw: rawTempMin,
+        tempMaxRaw: rawTempMax,
         cityAndCountry: "$name, ${sys!.country}",
         weatherConditionIconUrl:
             "https://openweathermap.org/img/wn/${weather![0].icon}@2x.png",
         weatherConditionIconDescription: weather![0].description ?? '',
+        weatherMain: weather![0].main ?? '',
         humidity: "${main!.humidity}%",
         pressure: "${main!.pressure} mBar",
         visibility: "${(visibility ?? 0) / 1000.0} KM",
         wind: "${wind?.speed ?? 0} m/s",
+        windDegree: (wind?.deg ?? 0).toDouble(),
         feelsLike: "${rawFeelsLike.round()}°C",
         sunrise: unixTimestampToTimeString(sys!.sunrise),
         sunset: unixTimestampToTimeString(sys!.sunset));
