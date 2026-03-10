@@ -23,6 +23,7 @@ class _HomePageState extends State<HomePage> {
   List<City> cityList = [];
   City? selectedCity;
   bool isLoading = false;
+  bool isCelsius = true;
   WeatherData? weather;
   late WeatherApi weatherApi;
 
@@ -112,6 +113,30 @@ class _HomePageState extends State<HomePage> {
                 const SizedBox(width: 4),
                 const Text('\u{1F1F5}\u{1F1F0}', style: TextStyle(fontSize: 14)),
               ],
+            ),
+          ),
+          const Spacer(),
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                isCelsius = !isCelsius;
+              });
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: const Color(0xFF64FFDA).withAlpha(30),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: const Color(0xFF64FFDA).withAlpha(80)),
+              ),
+              child: Text(
+                isCelsius ? '°C' : '°F',
+                style: const TextStyle(
+                  color: Color(0xFF64FFDA),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
             ),
           ),
         ],
@@ -268,7 +293,9 @@ class _HomePageState extends State<HomePage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  weather!.temperature,
+                  isCelsius
+                      ? weather!.tempRaw.round().toString()
+                      : celsiusToFahrenheit(weather!.tempRaw).round().toString(),
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: isSmall ? 64 : 80,
@@ -279,7 +306,7 @@ class _HomePageState extends State<HomePage> {
                 Padding(
                   padding: const EdgeInsets.only(top: 6),
                   child: Text(
-                    '\u00b0C',
+                    isCelsius ? '\u00b0C' : '\u00b0F',
                     style: TextStyle(
                       color: const Color(0xFF64FFDA),
                       fontSize: isSmall ? 22 : 28,
@@ -315,7 +342,9 @@ class _HomePageState extends State<HomePage> {
           ),
           const SizedBox(height: 6),
           Text(
-            'Feels like ${weather!.feelsLike}',
+            isCelsius
+                ? 'Feels like ${weather!.feelsLikeRaw.round()}°C'
+                : 'Feels like ${celsiusToFahrenheit(weather!.feelsLikeRaw).round()}°F',
             style:
                 TextStyle(color: Colors.white.withAlpha(130), fontSize: 13),
           ),
