@@ -2,12 +2,19 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:weather_forecast_pk/config/build_config.dart';
 import 'package:weather_forecast_pk/core/app_utils.dart';
+import 'package:weather_forecast_pk/core/favorites_manager.dart';
+import 'package:weather_forecast_pk/core/weather_helpers.dart';
 import 'package:weather_forecast_pk/network/WeatherApi.dart';
 import 'package:weather_forecast_pk/network/WeatherApiImpl.dart';
 import 'package:weather_forecast_pk/ui/home/model/City.dart';
+import 'package:weather_forecast_pk/ui/home/model/forecast_day.dart';
 import 'package:weather_forecast_pk/ui/home/model/weather_data.dart';
+import 'package:weather_forecast_pk/ui/home/widget/city_search_delegate.dart';
+import 'package:weather_forecast_pk/ui/home/widget/forecast_widget.dart';
+import 'package:weather_forecast_pk/ui/home/widget/wind_compass_widget.dart';
 
 class HomePage extends StatefulWidget {
   final String title;
@@ -25,6 +32,9 @@ class _HomePageState extends State<HomePage> {
   bool isLoading = false;
   bool isCelsius = true;
   WeatherData? weather;
+  List<ForecastDay> forecast = [];
+  List<int> favoriteCityIds = [];
+  DateTime? lastUpdated;
   late WeatherApi weatherApi;
 
   @override
@@ -32,21 +42,53 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     readCityList();
     weatherApi = WeatherApiImpl();
+    _loadFavorites();
+  }
+
+  Future<void> _loadFavorites() async {
+    final favs = await FavoritesManager.getFavorites();
+    setState(() {
+      favoriteCityIds = favs;
+    });
+  }
+
+  Future<void> _toggleFavorite() async {
+    if (selectedCity == null) return;
+    await FavoritesManager.toggleFavorite(selectedCity!.id);
+    await _loadFavorites();
+  }
+
+  void _shareWeather() {
+    if (weather == null) return;
+    final temp = isCelsius
+        ? '${weather!.tempRaw.round()}°C'
+        : '${celsiusToFahrenheit(weather!.tempRaw).round()}°F';
+    final text = '🌤 Weather in ${weather!.cityAndCountry}\n'
+        '🌡 Temperature: $temp\n'
+        '💧 Humidity: ${weather!.humidity}\n'
+        '💨 Wind: ${weather!.wind}\n'
+        '🌅 Sunrise: ${weather!.sunrise}\n'
+        '🌇 Sunset: ${weather!.sunset}\n'
+        '${weather!.weatherConditionIconDescription}\n\n'
+        'Sent from Weather Forecast PK app';
+    Share.share(text);
   }
 
   @override
   Widget build(BuildContext context) {
+    final bgGradient = weather != null
+        ? getWeatherGradient(weather!.weatherMain)
+        : const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF0F0C29), Color(0xFF302B63), Color(0xFF24243E)],
+          );
+
     return Scaffold(
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF0F0C29), Color(0xFF302B63), Color(0xFF24243E)],
-          ),
-        ),
+        decoration: BoxDecoration(gradient: bgGradient),
         child: SafeArea(
           child: LayoutBuilder(
             builder: (context, constraints) {
@@ -60,7 +102,12 @@ class _HomePageState extends State<HomePage> {
                             child: CircularProgressIndicator(
                                 color: Color(0xFF64FFDA), strokeWidth: 2.5))
                         : weather != null
-                            ? _buildWeatherContent(constraints)
+                            ? RefreshIndicator(
+                                color: const Color(0xFF64FFDA),
+                                backgroundColor: const Color(0xFF302B63),
+                                onRefresh: _refreshWeather,
+                                child: _buildWeatherContent(constraints),
+                              )
                             : _buildEmptyState(),
                   ),
                 ],
@@ -70,6 +117,11 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
     );
+  }
+
+  Future<void> _refreshWeather() async {
+    if (selectedCity == null) return;
+    await showWeather();
   }
 
   Widget _buildHeader(BoxConstraints constraints) {
@@ -116,6 +168,41 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           const Spacer(),
+          if (weather != null)
+            GestureDetector(
+              onTap: _shareWeather,
+              child: Container(
+                padding: const EdgeInsets.all(6),
+                margin: const EdgeInsets.only(right: 6),
+                decoration: BoxDecoration(
+                  color: Colors.white.withAlpha(12),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Icon(Icons.share_outlined,
+                    color: Colors.white70, size: 18),
+              ),
+            ),
+          if (selectedCity != null)
+            GestureDetector(
+              onTap: _toggleFavorite,
+              child: Container(
+                padding: const EdgeInsets.all(6),
+                margin: const EdgeInsets.only(right: 6),
+                decoration: BoxDecoration(
+                  color: Colors.white.withAlpha(12),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Icon(
+                  favoriteCityIds.contains(selectedCity!.id)
+                      ? Icons.star
+                      : Icons.star_border,
+                  color: favoriteCityIds.contains(selectedCity!.id)
+                      ? const Color(0xFFFFD700)
+                      : Colors.white70,
+                  size: 18,
+                ),
+              ),
+            ),
           GestureDetector(
             onTap: () {
               setState(() {
@@ -161,25 +248,39 @@ class _HomePageState extends State<HomePage> {
                 color: const Color(0xFF64FFDA), size: isSmall ? 18 : 20),
             const SizedBox(width: 8),
             Expanded(
-              child: DropdownButtonHideUnderline(
-                child: DropdownButton<City>(
-                  value: selectedCity,
-                  isExpanded: true,
-                  dropdownColor: const Color(0xFF302B63),
-                  style: TextStyle(
-                      color: Colors.white, fontSize: isSmall ? 14 : 15),
-                  icon: const Icon(Icons.expand_more, color: Colors.white54),
-                  onChanged: (City? newCity) {
+              child: GestureDetector(
+                onTap: () async {
+                  final result = await showSearch<City?>(
+                    context: context,
+                    delegate: CitySearchDelegate(
+                      cities: cityList,
+                      favoriteCityIds: favoriteCityIds,
+                    ),
+                  );
+                  if (result != null) {
                     setState(() {
-                      if (newCity != null) selectedCity = newCity;
+                      selectedCity = result;
                     });
-                  },
-                  items: cityList.map((City city) {
-                    return DropdownMenuItem<City>(
-                      value: city,
-                      child: Text(city.name),
-                    );
-                  }).toList(),
+                  }
+                },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          selectedCity?.name ?? 'Select a city...',
+                          style: TextStyle(
+                            color: selectedCity != null
+                                ? Colors.white
+                                : Colors.white54,
+                            fontSize: isSmall ? 14 : 15,
+                          ),
+                        ),
+                      ),
+                      const Icon(Icons.search, color: Colors.white54, size: 18),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -234,19 +335,120 @@ class _HomePageState extends State<HomePage> {
   Widget _buildWeatherContent(BoxConstraints constraints) {
     final isSmall = constraints.maxWidth < 360;
     final hPad = isSmall ? 12.0 : 20.0;
+    final alert = getWeatherAlert(weather!.tempRaw, weather!.weatherMain);
 
     return ListView(
       padding: EdgeInsets.symmetric(horizontal: hPad),
-      physics: const BouncingScrollPhysics(),
+      physics: const AlwaysScrollableScrollPhysics(
+          parent: BouncingScrollPhysics()),
       children: [
         const SizedBox(height: 8),
+        // Weather Alert Badge
+        if (alert != null) _buildAlertBadge(alert),
+        if (alert != null) const SizedBox(height: 10),
         _buildMainCard(constraints),
+        const SizedBox(height: 10),
+        // Min/Max Temp Row
+        _buildMinMaxRow(constraints),
         const SizedBox(height: 14),
         _buildDetailsRow(constraints),
         const SizedBox(height: 14),
         _buildInfoCard(constraints),
+        const SizedBox(height: 14),
+        // Wind Compass
+        WindCompassWidget(
+          windDegree: weather!.windDegree,
+          windSpeed: weather!.wind,
+        ),
+        const SizedBox(height: 14),
+        // 5-Day Forecast
+        ForecastWidget(forecast: forecast, isCelsius: isCelsius),
+        const SizedBox(height: 10),
+        // Last Updated
+        if (lastUpdated != null) _buildLastUpdated(),
         const SizedBox(height: 20),
       ],
+    );
+  }
+
+  Widget _buildAlertBadge(String alert) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
+      decoration: BoxDecoration(
+        color: Colors.red.withAlpha(40),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.red.withAlpha(80)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.warning_amber_rounded,
+              color: Colors.redAccent, size: 20),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              alert,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMinMaxRow(BoxConstraints constraints) {
+    final minTemp = isCelsius
+        ? weather!.tempMinRaw.round()
+        : celsiusToFahrenheit(weather!.tempMinRaw).round();
+    final maxTemp = isCelsius
+        ? weather!.tempMaxRaw.round()
+        : celsiusToFahrenheit(weather!.tempMaxRaw).round();
+    final unit = isCelsius ? '°C' : '°F';
+
+    return Row(
+      children: [
+        Expanded(
+          child: _tile(Icons.arrow_downward, 'Min Temp', '$minTemp$unit'),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _tile(Icons.arrow_upward, 'Max Temp', '$maxTemp$unit'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLastUpdated() {
+    final timeStr =
+        '${lastUpdated!.hour.toString().padLeft(2, '0')}:${lastUpdated!.minute.toString().padLeft(2, '0')}';
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.only(top: 4),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.access_time, color: Colors.white.withAlpha(80), size: 13),
+            const SizedBox(width: 4),
+            Text(
+              'Last updated at $timeStr',
+              style: TextStyle(
+                color: Colors.white.withAlpha(80),
+                fontSize: 11,
+              ),
+            ),
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: _refreshWeather,
+              child: Icon(Icons.refresh,
+                  color: const Color(0xFF64FFDA).withAlpha(150), size: 16),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -480,8 +682,11 @@ class _HomePageState extends State<HomePage> {
     });
     try {
       var weatherTemp = await weatherApi.getWeatherInfo(selectedCity?.id);
+      var forecastTemp = await weatherApi.getForecast(selectedCity?.id);
       setState(() {
         weather = weatherTemp;
+        forecast = forecastTemp;
+        lastUpdated = DateTime.now();
         isLoading = false;
       });
     } catch (e) {
