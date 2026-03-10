@@ -1,6 +1,8 @@
 class WeatherData {
   String dateTime;
   String temperature;
+  double tempRaw;
+  double feelsLikeRaw;
   String cityAndCountry;
   String weatherConditionIconUrl;
   String weatherConditionIconDescription;
@@ -15,6 +17,8 @@ class WeatherData {
   WeatherData({
     required this.dateTime,
     required this.temperature,
+    required this.tempRaw,
+    required this.feelsLikeRaw,
     required this.cityAndCountry,
     required this.weatherConditionIconUrl,
     required this.weatherConditionIconDescription,
