@@ -7,6 +7,7 @@ import 'package:weather_forecast_pk/config/build_config.dart';
 import 'package:weather_forecast_pk/config/env_config.dart';
 
 import 'ui/home/view/HomePage.dart';
+import 'ui/splash/splash_screen.dart';
 
 Future<void> main() async {
   var logger = Logger();
@@ -40,7 +41,7 @@ class MyApp extends StatelessWidget {
         brightness: Brightness.dark,
         scaffoldBackgroundColor: const Color(0xFF1A237E),
       ),
-      home: HomePage(title: appTitle),
+      home: SplashScreen(nextScreen: HomePage(title: appTitle)),
       debugShowCheckedModeBanner: false,
     );
   }
