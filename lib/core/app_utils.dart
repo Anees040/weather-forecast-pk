@@ -21,6 +21,10 @@ int kelvinToCelsius(double? temperature) {
   return (temperature - 273.15).toInt();
 }
 
+double celsiusToFahrenheit(double celsius) {
+  return celsius * 9 / 5 + 32;
+}
+
 enum SnackBarType { MESSAGE, ERROR }
 
 showSnackBar(BuildContext context, String message,
