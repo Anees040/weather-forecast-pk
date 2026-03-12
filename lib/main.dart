@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:logger/logger.dart';
 import 'package:weather_forecast_pk/config/build_config.dart';
 import 'package:weather_forecast_pk/config/env_config.dart';
+import 'package:weather_forecast_pk/core/theme_provider.dart';
 
 import 'ui/home/view/HomePage.dart';
 import 'ui/splash/splash_screen.dart';
@@ -15,7 +16,9 @@ Future<void> main() async {
   try {
     EnvConfig config = await getConfig();
     BuildConfig.instantiate(envConfig: config);
-    runApp(MyApp());
+    final themeProvider = AppThemeProvider();
+    await themeProvider.loadPreferences();
+    runApp(MyApp(themeProvider: themeProvider));
   } catch (e) {
     logger.e(e);
   }
@@ -28,20 +31,47 @@ class NoScrollbarBehavior extends ScrollBehavior {
   }
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
+  final AppThemeProvider themeProvider;
+
+  const MyApp({Key? key, required this.themeProvider}) : super(key: key);
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
   final String appTitle = 'Weather Forecast';
+
+  @override
+  void initState() {
+    super.initState();
+    widget.themeProvider.addListener(_onThemeChanged);
+  }
+
+  @override
+  void dispose() {
+    widget.themeProvider.removeListener(_onThemeChanged);
+    super.dispose();
+  }
+
+  void _onThemeChanged() {
+    setState(() {});
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: appTitle,
       scrollBehavior: NoScrollbarBehavior(),
-      theme: ThemeData(
-        primarySwatch: Colors.indigo,
-        brightness: Brightness.dark,
-        scaffoldBackgroundColor: const Color(0xFF1A237E),
+      theme: widget.themeProvider.buildTheme(context),
+      home: SplashScreen(
+        themeProvider: widget.themeProvider,
+        nextScreen: HomePage(
+          title: appTitle,
+          themeProvider: widget.themeProvider,
+        ),
       ),
-      home: SplashScreen(nextScreen: HomePage(title: appTitle)),
       debugShowCheckedModeBanner: false,
     );
   }
