@@ -4,27 +4,36 @@ import 'package:weather_forecast_pk/ui/home/model/City.dart';
 class CitySearchDelegate extends SearchDelegate<City?> {
   final List<City> cities;
   final List<int> favoriteCityIds;
+  final bool isDark;
+  final Color accent;
 
-  CitySearchDelegate({required this.cities, this.favoriteCityIds = const []});
+  CitySearchDelegate({
+    required this.cities,
+    this.favoriteCityIds = const [],
+    required this.isDark,
+    required this.accent,
+  });
 
   @override
   String get searchFieldLabel => 'Search city...';
 
   @override
   ThemeData appBarTheme(BuildContext context) {
+    final background = isDark ? const Color(0xFF121218) : const Color(0xFFF5F7FA);
+    final foreground = isDark ? Colors.white : const Color(0xFF1A1A2E);
     return ThemeData(
-      appBarTheme: const AppBarTheme(
-        backgroundColor: Color(0xFF302B63),
-        foregroundColor: Colors.white,
+      appBarTheme: AppBarTheme(
+        backgroundColor: background,
+        foregroundColor: foreground,
       ),
-      inputDecorationTheme: const InputDecorationTheme(
-        hintStyle: TextStyle(color: Colors.white54),
+      inputDecorationTheme: InputDecorationTheme(
+        hintStyle: TextStyle(color: foreground.withAlpha(140)),
         border: InputBorder.none,
       ),
-      textTheme: const TextTheme(
-        titleLarge: TextStyle(color: Colors.white, fontSize: 18),
+      textTheme: TextTheme(
+        titleLarge: TextStyle(color: foreground, fontSize: 18),
       ),
-      scaffoldBackgroundColor: const Color(0xFF0F0C29),
+      scaffoldBackgroundColor: background,
     );
   }
 
@@ -33,7 +42,7 @@ class CitySearchDelegate extends SearchDelegate<City?> {
     return [
       if (query.isNotEmpty)
         IconButton(
-          icon: const Icon(Icons.clear, color: Colors.white54),
+          icon: Icon(Icons.clear, color: isDark ? Colors.white54 : const Color(0xFF6A6A7A)),
           onPressed: () => query = '',
         ),
     ];
@@ -42,7 +51,7 @@ class CitySearchDelegate extends SearchDelegate<City?> {
   @override
   Widget? buildLeading(BuildContext context) {
     return IconButton(
-      icon: const Icon(Icons.arrow_back, color: Colors.white),
+      icon: Icon(Icons.arrow_back, color: isDark ? Colors.white : const Color(0xFF1A1A2E)),
       onPressed: () => close(context, null),
     );
   }
@@ -58,6 +67,9 @@ class CitySearchDelegate extends SearchDelegate<City?> {
   }
 
   Widget _buildList(BuildContext context) {
+    final background = isDark ? const Color(0xFF121218) : const Color(0xFFF5F7FA);
+    final textColor = isDark ? Colors.white : const Color(0xFF1A1A2E);
+    final subColor = isDark ? Colors.white.withAlpha(120) : const Color(0xFF6A6A7A);
     final filtered = query.isEmpty
         ? cities
         : cities
@@ -73,7 +85,7 @@ class CitySearchDelegate extends SearchDelegate<City?> {
     });
 
     return Container(
-      color: const Color(0xFF0F0C29),
+      color: background,
       child: ListView.builder(
         itemCount: filtered.length,
         itemBuilder: (context, index) {
@@ -82,16 +94,16 @@ class CitySearchDelegate extends SearchDelegate<City?> {
           return ListTile(
             leading: Icon(
               isFav ? Icons.star : Icons.location_city,
-              color: isFav ? const Color(0xFFFFD700) : const Color(0xFF64FFDA),
+              color: isFav ? const Color(0xFFFFD700) : accent,
               size: 20,
             ),
             title: Text(
               city.name,
-              style: const TextStyle(color: Colors.white, fontSize: 15),
+              style: TextStyle(color: textColor, fontSize: 15),
             ),
             subtitle: Text(
               city.countryCode,
-              style: TextStyle(color: Colors.white.withAlpha(120), fontSize: 12),
+              style: TextStyle(color: subColor, fontSize: 12),
             ),
             onTap: () => close(context, city),
           );
