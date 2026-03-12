@@ -6,6 +6,7 @@ class ForecastDay {
   final String description;
   final int humidity;
   final double windSpeed;
+  final double pop; // probability of precipitation (0-100%)
 
   ForecastDay({
     required this.day,
@@ -15,5 +16,6 @@ class ForecastDay {
     required this.description,
     required this.humidity,
     required this.windSpeed,
+    required this.pop,
   });
 }
