@@ -149,131 +149,305 @@ class _HomePageState extends State<HomePage> {
       Color textColor, Color subColor) {
     final isSmall = constraints.maxWidth < 360;
     return Padding(
-      padding: EdgeInsets.fromLTRB(isSmall ? 12 : 20, 12, isSmall ? 12 : 20, 4),
-      child: Row(
+      padding: EdgeInsets.fromLTRB(isSmall ? 16 : 24, 16, isSmall ? 16 : 24, 8),
+      child: Column(
         children: [
-          Icon(Icons.cloud_outlined, color: accent, size: 26),
-          const SizedBox(width: 8),
-          Flexible(
-            child: Text(
-              'Weather Forecast',
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: textColor,
-                fontSize: isSmall ? 18 : 21,
-                fontWeight: FontWeight.w600,
-                letterSpacing: 0.5,
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: textColor.withAlpha(isDark ? 15 : 10),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'PK',
-                  style: TextStyle(
-                    color: subColor,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
+          // Top row with app branding and quick actions
+          Row(
+            children: [
+              // App branding
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: accent.withAlpha(20),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      Icons.wb_sunny_rounded,
+                      color: accent,
+                      size: 20,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 4),
-                const Text('\u{1F1F5}\u{1F1F0}', style: TextStyle(fontSize: 14)),
-              ],
-            ),
-          ),
-          const Spacer(),
-          if (weather != null)
-            _headerButton(
-              icon: Icons.share_outlined,
-              onTap: _shareWeather,
-              isDark: isDark,
-              textColor: textColor,
-            ),
-          if (selectedCity != null)
-            _headerButton(
-              icon: favoriteCityIds.contains(selectedCity!.id)
-                  ? Icons.star
-                  : Icons.star_border,
-              onTap: _toggleFavorite,
-              isDark: isDark,
-              textColor: textColor,
-              iconColor: favoriteCityIds.contains(selectedCity!.id)
-                  ? const Color(0xFFFFD700)
-                  : null,
-            ),
-          GestureDetector(
-            onTap: () {
-              setState(() {
-                isCelsius = !isCelsius;
-              });
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              margin: const EdgeInsets.only(right: 6),
-              decoration: BoxDecoration(
-                color: accent.withAlpha(30),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: accent.withAlpha(80)),
+                  const SizedBox(width: 12),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Weather',
+                        style: TextStyle(
+                          color: textColor,
+                          fontSize: isSmall ? 18 : 20,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          Text(
+                            'Pakistan',
+                            style: TextStyle(
+                              color: subColor,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          const Text('\u{1F1F5}\u{1F1F0}', style: TextStyle(fontSize: 12)),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
               ),
-              child: Text(
-                isCelsius ? '°C' : '°F',
-                style: TextStyle(
-                  color: accent,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                ),
+              const Spacer(),
+              // Primary quick actions
+              Row(
+                children: [
+                  // Temperature unit toggle
+                  _temperatureToggle(accent, textColor, isDark),
+                  const SizedBox(width: 8),
+                  // More options menu
+                  _moreOptionsButton(isDark, accent, textColor),
+                ],
               ),
-            ),
+            ],
           ),
-          _headerButton(
-            icon: Icons.settings_outlined,
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => SettingsScreen(themeProvider: tp),
-                ),
-              );
-            },
-            isDark: isDark,
-            textColor: textColor,
-          ),
+          // Current location display (if weather loaded)
+          if (weather != null) ...[
+            const SizedBox(height: 12),
+            _buildLocationRow(constraints, isDark, accent, textColor, subColor),
+          ],
         ],
       ),
     );
   }
 
-  Widget _headerButton({
-    required IconData icon,
-    required VoidCallback onTap,
-    required bool isDark,
-    required Color textColor,
-    Color? iconColor,
-  }) {
+  Widget _temperatureToggle(Color accent, Color textColor, bool isDark) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: () {
+        setState(() {
+          isCelsius = !isCelsius;
+        });
+      },
       child: Container(
-        padding: const EdgeInsets.all(6),
-        margin: const EdgeInsets.only(right: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
-          color: textColor.withAlpha(isDark ? 12 : 10),
-          borderRadius: BorderRadius.circular(20),
+          color: accent.withAlpha(20),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: accent.withAlpha(40),
+            width: 1,
+          ),
         ),
-        child: Icon(
-          icon,
-          color: iconColor ?? (isDark ? Colors.white70 : const Color(0xFF5A5A6A)),
-          size: 18,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.thermostat_outlined, color: accent, size: 16),
+            const SizedBox(width: 6),
+            Text(
+              isCelsius ? '°C' : '°F',
+              style: TextStyle(
+                color: accent,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.3,
+              ),
+            ),
+          ],
         ),
       ),
     );
+  }
+
+  Widget _moreOptionsButton(bool isDark, Color accent, Color textColor) {
+    return PopupMenuButton<String>(
+      padding: EdgeInsets.zero,
+      icon: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: textColor.withAlpha(isDark ? 15 : 8),
+          borderRadius: BorderRadius.circular(24),
+        ),
+        child: Icon(
+          Icons.more_vert,
+          color: isDark ? Colors.white70 : const Color(0xFF5A5A6A),
+          size: 18,
+        ),
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+      ),
+      color: isDark ? const Color(0xFF2A2A3A) : Colors.white,
+      elevation: 8,
+      offset: const Offset(-8, 40),
+      itemBuilder: (BuildContext context) => [
+        if (weather != null)
+          PopupMenuItem<String>(
+            value: 'share',
+            child: Row(
+              children: [
+                Icon(Icons.share_outlined, size: 18, color: accent),
+                const SizedBox(width: 12),
+                Text(
+                  'Share Weather',
+                  style: TextStyle(
+                    color: textColor,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        if (selectedCity != null)
+          PopupMenuItem<String>(
+            value: 'favorite',
+            child: Row(
+              children: [
+                Icon(
+                  favoriteCityIds.contains(selectedCity!.id)
+                      ? Icons.star
+                      : Icons.star_border,
+                  size: 18,
+                  color: favoriteCityIds.contains(selectedCity!.id)
+                      ? const Color(0xFFFFD700)
+                      : accent,
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  favoriteCityIds.contains(selectedCity!.id)
+                      ? 'Remove from Favorites'
+                      : 'Add to Favorites',
+                  style: TextStyle(
+                    color: textColor,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        PopupMenuItem<String>(
+          value: 'settings',
+          child: Row(
+            children: [
+              Icon(Icons.settings_outlined, size: 18, color: accent),
+              const SizedBox(width: 12),
+              Text(
+                'Settings',
+                style: TextStyle(
+                  color: textColor,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+      onSelected: (String value) {
+        switch (value) {
+          case 'share':
+            _shareWeather();
+            break;
+          case 'favorite':
+            _toggleFavorite();
+            break;
+          case 'settings':
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => SettingsScreen(themeProvider: tp),
+              ),
+            );
+            break;
+        }
+      },
+    );
+  }
+
+  Widget _buildLocationRow(BoxConstraints constraints, bool isDark, Color accent,
+      Color textColor, Color subColor) {
+    if (selectedCity == null) return const SizedBox.shrink();
+    
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: textColor.withAlpha(isDark ? 8 : 5),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: textColor.withAlpha(isDark ? 20 : 15),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.place_outlined,
+            color: accent,
+            size: 18,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  selectedCity!.name,
+                  style: TextStyle(
+                    color: textColor,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.3,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (lastUpdated != null)
+                  Text(
+                    'Updated ${_formatLastUpdateTime()}',
+                    style: TextStyle(
+                      color: subColor,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          if (favoriteCityIds.contains(selectedCity!.id))
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFD700).withAlpha(20),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(
+                Icons.star,
+                color: Color(0xFFFFD700),
+                size: 16,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  String _formatLastUpdateTime() {
+    if (lastUpdated == null) return '';
+    final now = DateTime.now();
+    final diff = now.difference(lastUpdated!);
+    
+    if (diff.inMinutes < 1) {
+      return 'just now';
+    } else if (diff.inMinutes < 60) {
+      return '${diff.inMinutes}m ago';
+    } else if (diff.inHours < 24) {
+      return '${diff.inHours}h ago';
+    } else {
+      return '${diff.inDays}d ago';
+    }
   }
 
   Widget _buildCitySelector(BoxConstraints constraints, bool isDark,
