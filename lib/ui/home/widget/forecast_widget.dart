@@ -5,16 +5,22 @@ import 'package:weather_forecast_pk/ui/home/model/forecast_day.dart';
 class ForecastWidget extends StatelessWidget {
   final List<ForecastDay> forecast;
   final bool isCelsius;
+  final bool isDark;
+  final Color accent;
 
   const ForecastWidget({
     Key? key,
     required this.forecast,
     required this.isCelsius,
+    required this.isDark,
+    required this.accent,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     if (forecast.isEmpty) return const SizedBox.shrink();
+
+    final textColor = isDark ? Colors.white : const Color(0xFF1A1A2E);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -23,13 +29,12 @@ class ForecastWidget extends StatelessWidget {
           padding: const EdgeInsets.only(bottom: 10),
           child: Row(
             children: [
-              const Icon(Icons.calendar_today,
-                  color: Color(0xFF64FFDA), size: 16),
+              Icon(Icons.calendar_today, color: accent, size: 16),
               const SizedBox(width: 6),
               Text(
                 '5-Day Forecast',
                 style: TextStyle(
-                  color: Colors.white.withAlpha(200),
+                  color: textColor.withAlpha(200),
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                 ),
@@ -43,6 +48,9 @@ class ForecastWidget extends StatelessWidget {
   }
 
   Widget _buildDayRow(ForecastDay day) {
+    final textColor = isDark ? Colors.white : const Color(0xFF1A1A2E);
+    final subColor = isDark ? Colors.white.withAlpha(160) : const Color(0xFF6A6A7A);
+    final cardColor = isDark ? Colors.white.withAlpha(10) : Colors.black.withAlpha(8);
     final minTemp = isCelsius
         ? day.tempMin.round()
         : celsiusToFahrenheit(day.tempMin).round();
@@ -55,7 +63,7 @@ class ForecastWidget extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 6),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white.withAlpha(10),
+        color: cardColor,
         borderRadius: BorderRadius.circular(10),
       ),
       child: Row(
@@ -65,7 +73,7 @@ class ForecastWidget extends StatelessWidget {
             width: 90,
             child: Text(
               day.day,
-              style: const TextStyle(color: Colors.white, fontSize: 12),
+              style: TextStyle(color: textColor, fontSize: 12),
             ),
           ),
           // Icon
@@ -83,16 +91,38 @@ class ForecastWidget extends StatelessWidget {
               _capitalize(day.description),
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                color: Colors.white.withAlpha(160),
+                color: subColor,
                 fontSize: 12,
               ),
             ),
           ),
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '${day.pop.round()}%',
+                style: TextStyle(
+                  color: day.pop > 40 ? accent : subColor,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              Text(
+                'rain',
+                style: TextStyle(
+                  color: subColor,
+                  fontSize: 9,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(width: 10),
           // Min/Max temps
           Text(
             '$minTemp / $maxTemp$unit',
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: textColor,
               fontSize: 13,
               fontWeight: FontWeight.w600,
             ),
