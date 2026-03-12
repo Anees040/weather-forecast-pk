@@ -4,11 +4,15 @@ import 'package:flutter/material.dart';
 class WindCompassWidget extends StatelessWidget {
   final double windDegree;
   final String windSpeed;
+  final bool isDark;
+  final Color accent;
 
   const WindCompassWidget({
     Key? key,
     required this.windDegree,
     required this.windSpeed,
+    required this.isDark,
+    required this.accent,
   }) : super(key: key);
 
   String _degreeToDirection(double deg) {
@@ -19,18 +23,20 @@ class WindCompassWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textColor = isDark ? Colors.white : const Color(0xFF1A1A2E);
+    final subColor = isDark ? Colors.white.withAlpha(150) : const Color(0xFF6A6A7A);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withAlpha(14),
+        color: isDark ? Colors.white.withAlpha(14) : Colors.black.withAlpha(8),
         borderRadius: BorderRadius.circular(14),
       ),
       child: Column(
         children: [
-          const Text(
+          Text(
             'Wind Direction',
             style: TextStyle(
-              color: Color(0xFF64FFDA),
+              color: accent,
               fontSize: 13,
               fontWeight: FontWeight.w600,
             ),
@@ -40,15 +46,15 @@ class WindCompassWidget extends StatelessWidget {
             width: 120,
             height: 120,
             child: CustomPaint(
-              painter: _CompassPainter(windDegree),
+              painter: _CompassPainter(windDegree, isDark: isDark, accent: accent),
               child: Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
                       _degreeToDirection(windDegree),
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: textColor,
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
                       ),
@@ -56,7 +62,7 @@ class WindCompassWidget extends StatelessWidget {
                     Text(
                       '${windDegree.round()}°',
                       style: TextStyle(
-                        color: Colors.white.withAlpha(150),
+                        color: subColor,
                         fontSize: 11,
                       ),
                     ),
@@ -68,8 +74,8 @@ class WindCompassWidget extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             windSpeed,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: textColor,
               fontSize: 15,
               fontWeight: FontWeight.w600,
             ),
@@ -82,8 +88,10 @@ class WindCompassWidget extends StatelessWidget {
 
 class _CompassPainter extends CustomPainter {
   final double windDegree;
+  final bool isDark;
+  final Color accent;
 
-  _CompassPainter(this.windDegree);
+  _CompassPainter(this.windDegree, {required this.isDark, required this.accent});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -92,14 +100,14 @@ class _CompassPainter extends CustomPainter {
 
     // Outer circle
     final circlePaint = Paint()
-      ..color = Colors.white.withAlpha(30)
+      ..color = isDark ? Colors.white.withAlpha(30) : Colors.black.withAlpha(20)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2;
     canvas.drawCircle(center, radius, circlePaint);
 
     // Cardinal direction marks
     final markPaint = Paint()
-      ..color = Colors.white.withAlpha(80)
+      ..color = isDark ? Colors.white.withAlpha(80) : Colors.black.withAlpha(60)
       ..strokeWidth = 2
       ..strokeCap = StrokeCap.round;
 
@@ -121,7 +129,7 @@ class _CompassPainter extends CustomPainter {
     // Wind direction arrow
     final arrowAngle = (windDegree - 90) * pi / 180;
     final arrowPaint = Paint()
-      ..color = const Color(0xFF64FFDA)
+      ..color = accent
       ..strokeWidth = 3
       ..strokeCap = StrokeCap.round;
 
@@ -153,12 +161,14 @@ class _CompassPainter extends CustomPainter {
     );
 
     // Center dot
-    final dotPaint = Paint()..color = const Color(0xFF64FFDA);
+    final dotPaint = Paint()..color = accent;
     canvas.drawCircle(center, 4, dotPaint);
   }
 
   @override
   bool shouldRepaint(covariant _CompassPainter oldDelegate) {
-    return oldDelegate.windDegree != windDegree;
+    return oldDelegate.windDegree != windDegree ||
+        oldDelegate.isDark != isDark ||
+        oldDelegate.accent != accent;
   }
 }
