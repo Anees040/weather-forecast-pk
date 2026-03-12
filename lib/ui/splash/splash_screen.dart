@@ -1,9 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
+import 'package:weather_forecast_pk/core/theme_provider.dart';
 
 class SplashScreen extends StatefulWidget {
   final Widget nextScreen;
+  final AppThemeProvider? themeProvider;
 
-  const SplashScreen({Key? key, required this.nextScreen}) : super(key: key);
+  const SplashScreen({Key? key, required this.nextScreen, this.themeProvider}) : super(key: key);
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -14,6 +18,7 @@ class _SplashScreenState extends State<SplashScreen>
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
+  Timer? _navigationTimer;
 
   @override
   void initState() {
@@ -33,39 +38,47 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   void _navigateToHome() async {
-    await Future.delayed(const Duration(seconds: 3));
-    if (mounted) {
-      Navigator.of(context).pushReplacement(
-        PageRouteBuilder(
-          pageBuilder: (context, animation, secondaryAnimation) =>
-              widget.nextScreen,
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            return FadeTransition(opacity: animation, child: child);
-          },
-          transitionDuration: const Duration(milliseconds: 600),
-        ),
-      );
-    }
+    _navigationTimer = Timer(const Duration(seconds: 3), () {
+      if (mounted) {
+        Navigator.of(context).pushReplacement(
+          PageRouteBuilder(
+            pageBuilder: (context, animation, secondaryAnimation) =>
+                widget.nextScreen,
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              return FadeTransition(opacity: animation, child: child);
+            },
+            transitionDuration: const Duration(milliseconds: 600),
+          ),
+        );
+      }
+    });
   }
 
   @override
   void dispose() {
+    _navigationTimer?.cancel();
     _controller.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final isDark = widget.themeProvider?.isDark(context) ?? true;
+    final accent = widget.themeProvider?.accent ?? const Color(0xFF5B9BD5);
+    final gradient = widget.themeProvider?.getBackgroundGradient(context, 'clear') ??
+        const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF0D1321), Color(0xFF1D2D44), Color(0xFF3E5C76)],
+        );
+    final textColor = isDark ? Colors.white : const Color(0xFF1A1A2E);
+
     return Scaffold(
       body: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF0F0C29), Color(0xFF302B63), Color(0xFF24243E)],
-          ),
+        decoration: BoxDecoration(
+          gradient: gradient,
         ),
         child: FadeTransition(
           opacity: _fadeAnimation,
@@ -78,19 +91,19 @@ class _SplashScreenState extends State<SplashScreen>
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: const Color(0xFF64FFDA).withAlpha(20),
+                    color: accent.withAlpha(20),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.cloud_outlined,
-                    color: Color(0xFF64FFDA),
+                    color: accent,
                     size: 80,
                   ),
                 ),
                 const SizedBox(height: 24),
-                const Text(
+                Text(
                   'Weather Forecast',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: textColor,
                     fontSize: 28,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 1.2,
@@ -100,7 +113,7 @@ class _SplashScreenState extends State<SplashScreen>
                 Text(
                   'Pakistan Edition',
                   style: TextStyle(
-                    color: Colors.white.withAlpha(150),
+                    color: textColor.withAlpha(150),
                     fontSize: 14,
                     fontWeight: FontWeight.w400,
                     letterSpacing: 2,
@@ -111,7 +124,7 @@ class _SplashScreenState extends State<SplashScreen>
                   width: 28,
                   height: 28,
                   child: CircularProgressIndicator(
-                    color: const Color(0xFF64FFDA).withAlpha(150),
+                    color: accent.withAlpha(150),
                     strokeWidth: 2,
                   ),
                 ),
