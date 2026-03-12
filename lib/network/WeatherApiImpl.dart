@@ -3,6 +3,7 @@ import 'package:weather_forecast_pk/network/WeatherApi.dart';
 import 'package:weather_forecast_pk/network/dio_client.dart';
 import 'package:weather_forecast_pk/ui/home/model/forecast_day.dart';
 import 'package:weather_forecast_pk/ui/home/model/forecast_response.dart';
+import 'package:weather_forecast_pk/ui/home/model/hourly_forecast.dart';
 import 'package:weather_forecast_pk/ui/home/model/weather_data.dart';
 import 'package:weather_forecast_pk/ui/home/model/weather_response.dart';
 
@@ -25,6 +26,21 @@ class WeatherApiImpl extends WeatherApi {
       return ForecastResponse().toDailyForecast(response.data);
     } catch (e) {
       logger.e("Forecast error: $e");
+      return [];
+    }
+  }
+
+  @override
+  Future<List<HourlyForecast>> getHourlyForecast(int? cityId) async {
+    try {
+      var dioClient = DioClient().client;
+      var response = await dioClient.get(
+        '/forecast',
+        queryParameters: {'id': cityId},
+      );
+      return ForecastResponse().toHourlyForecast(response.data);
+    } catch (e) {
+      logger.e("Hourly forecast error: $e");
       return [];
     }
   }
