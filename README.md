@@ -1,118 +1,134 @@
-# Weather Forecast Pakistan
+# Weather App
 
-A modern, responsive weather forecast application built with **Flutter**, providing real-time weather data for major cities across Pakistan. Powered by the [OpenWeatherMap API](https://openweathermap.org/api).
+A sleek and intuitive weather application built with Flutter, delivering real-time weather information for cities worldwide.
 
----
-
-## Features
-
-- Real-time weather data for **15 major Pakistani cities**
-- Temperature, humidity, pressure, visibility, and wind speed
-- Sunrise & sunset times
-- Clean, dark-themed UI with gradient backgrounds
-- Fully responsive — works on all screen sizes without overflow
-- Secure API key management (config file excluded from version control)
+<p align="center">
+  <img src="screenshots/home.png" width="200" alt="Home Screen">
+  <img src="screenshots/weather.png" width="200" alt="Weather Details">
+  <img src="screenshots/settings.png" width="200" alt="Settings">
+</p>
 
 ---
 
-## Screenshots
+## ✨ Features
 
-| Home Screen | Weather View |
-|:-----------:|:------------:|
-| ![Home](screenshots/home.png) | ![Weather](screenshots/weather.png) |
-
----
-
-## Tech Stack
-
-| Layer        | Technology                          |
-|:-------------|:------------------------------------|
-| Framework    | Flutter (Dart)                      |
-| HTTP Client  | Dio 5.x                             |
-| API          | OpenWeatherMap — Current Weather    |
-| State Mgmt   | StatefulWidget                      |
-| Architecture | Service-based with Interceptors     |
+- **Real-time Weather:** Get up-to-the-minute weather data for any city.
+- **Detailed Forecast:** View temperature, humidity, wind speed, and more.
+- **Hourly & 5-Day Forecast:** Plan your week with detailed hourly and daily forecasts.
+- **City Search:** Easily search for and add new cities.
+- **Favorites:** Save your favorite cities for quick access.
+- **Dynamic UI:** A clean and responsive interface that adapts to all screen sizes.
+- **Customization:** Personalize the app with different themes and accent colors.
+- **Secure API Key:** Your API key is kept safe and is not exposed in the codebase.
 
 ---
 
-## Getting Started
+## 📸 Screenshots
+
+| | | |
+|:---:|:---:|:---:|
+| <img src="screenshots/home.png" alt="Home Screen" width="250"/> | <img src="screenshots/weather.png" alt="Weather Details" width="250"/> | <img src="screenshots/settings.png" alt="Settings" width="250"/> |
+| **Home Screen** | **Weather Details** | **Settings** |
+| <img src="screenshots/weather_light.png" alt="Light Mode" width="250"/> | <img src="screenshots/menu.png" alt="Menu" width="250"/> | <img src="screenshots/details.png" alt="More Details" width="250"/> |
+| **Light Mode** | **Menu Options** | **More Details** |
+| <img src="screenshots/updated.png" alt="Updated" width="250"/> | | |
+| **Updated Status** | | |
+
+---
+
+## 🛠️ Tech Stack
+
+| Category | Technology |
+|:---|:---|
+| **Framework** | Flutter (Dart) |
+| **State Management** | Provider |
+| **HTTP Client** | Dio |
+| **API** | OpenWeatherMap |
+| **Architecture** | Service-Oriented Architecture |
+
+---
+
+## 🚀 Getting Started
 
 ### Prerequisites
 
-- Flutter SDK `>=3.0.0`
-- A free [OpenWeatherMap](https://openweathermap.org/appid) API key
+- Flutter SDK (`>=3.0.0`)
+- An [OpenWeatherMap API key](https://openweathermap.org/appid)
 
 ### Installation
 
-```bash
-git clone https://github.com/Anees040/weather-forecast-pk.git
-cd weather-forecast-pk
-```
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/your-username/weather-app.git
+    cd weather-app
+    ```
+
+2.  **Install dependencies:**
+    ```bash
+    flutter pub get
+    ```
 
 ### Configuration
 
-1. Copy the template config:
-   ```bash
-   cp assets/config.template.json assets/config.json
-   ```
+1.  Create a `config.json` file in the `assets` directory from the template:
+    ```bash
+    cp assets/config.template.json assets/config.json
+    ```
 
-2. Open `assets/config.json` and add your API key:
-   ```json
-   {
-     "baseUrl": "https://api.openweathermap.org/data/2.5",
-     "appId": "YOUR_OPENWEATHERMAP_API_KEY"
-   }
-   ```
+2.  Add your OpenWeatherMap API key to `assets/config.json`:
+    ```json
+    {
+      "baseUrl": "https://api.openweathermap.org/data/2.5",
+      "appId": "YOUR_API_KEY"
+    }
+    ```
+    > **Note:** The `config.json` file is included in `.gitignore` to protect your API key.
 
-> **Note:** `assets/config.json` is listed in `.gitignore` — your API key will never be committed.
-
-### Run
+### Run the App
 
 ```bash
-flutter pub get
 flutter run
 ```
 
 ---
 
-## Project Structure
+## 📂 Project Structure
 
 ```
 lib/
-├── main.dart                  # App entry point & config loader
-├── config/                    # Build & environment configuration
-├── core/                      # Colors, text styles, utilities
-├── network/                   # Dio client, API interface & interceptors
-└── ui/home/
-    ├── model/                 # City, WeatherData, WeatherResponse
-    ├── view/                  # HomePage (main screen)
-    └── widget/                # Reusable UI components
+├── main.dart
+├── config/
+│   ├── build_config.dart
+│   └── env_config.dart
+├── core/
+│   ├── app_colors.dart
+│   ├── app_utils.dart
+│   ├── favorites_manager.dart
+│   ├── text_style.dart
+│   ├── theme_provider.dart
+│   └── weather_helpers.dart
+├── network/
+│   ├── api_interceptor.dart
+│   ├── dio_client.dart
+│   ├── WeatherApi.dart
+│   └── WeatherApiImpl.dart
+└── ui/
+    ├── home/
+    ├── settings/
+    └── splash/
 ```
 
 ---
 
-## Supported Cities
+## 📄 License
 
-Islamabad · Karachi · Lahore · Peshawar · Multan · Faisalabad · Quetta · Rawalpindi · Hyderabad · Sialkot · Gujranwala · Bahawalpur · Abbottabad · Sukkur · Larkana
-
----
-
-## API Reference
-
-This app uses the [OpenWeatherMap Current Weather API](https://openweathermap.org/current).
-
-- **Endpoint:** `GET /weather?id={city_id}&units=metric&appid={key}`
-- **Rate Limit:** 60 requests/minute (free tier)
-- **Response:** JSON with temperature, conditions, wind, humidity, sunrise/sunset
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
-## License
+## 👨‍💻 Author
 
-This project is open source and available under the [MIT License](LICENSE).
+**Anees**
 
----
+- **GitHub:** [@Anees040](https://github.com/Anees040)
 
-## Author
-
-**Anees** — [GitHub](https://github.com/Anees040)
